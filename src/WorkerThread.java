@@ -16,7 +16,14 @@ public class WorkerThread implements Runnable {
             try {
 
                 Job job = cluster.tomarJobEnEjecucion();
-                if (job == null) break; // Si recibe null, el hilo termina limpiamente
+//                if (job == null) break; // Si recibe null, el hilo termina limpiamente
+                if (job == null) {
+                    if (cluster.isSchedulerTerminado() && cluster.getTotalFinal() >= 500) {
+                        break;
+                    }
+                    Thread.sleep(50);
+                    continue;
+                }
 
                 int prob = random.nextInt(100);
 
