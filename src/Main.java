@@ -1,80 +1,76 @@
-import java.util.*;
+import model.Job;
+import monitor.ClusterMonitor;
+import monitor.JobQueueMonitor;
+import worker.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
-
     public static void main(String[] args) {
+        System.out.println("Iniciando Simulador de Cluster...");
 
-        long timer = System.currentTimeMillis();
-        // ========================
-        // 1. Crear nodos
-        // ========================
-        List<Nodo> nodos = new ArrayList<>();
-        for (int i = 0; i < 200; i++) {
-            nodos.add(new Nodo(i));
+        // Configuración
+        int totalNodes = 200; // 20x10 matrix
+        int rows = 20;
+        int cols = 10;
+        int totalJobs = 500;
+
+        // Monitores (Recursos compartidos protegidos)
+        ClusterMonitor clusterMonitor = new ClusterMonitor(rows, cols);
+        JobQueueMonitor queueMonitor = new JobQueueMonitor();
+
+        // Inicializar Jobs
+        for (int i = 1; i <= totalJobs; i++) {
+            queueMonitor.pushToInitialPool(new Job(i));
         }
 
-        // ========================
-        // 2. Crear jobs
-        // ========================
-        List<Job> jobs = new ArrayList<>();
-        for (int i = 0; i < 500; i++) {
-            jobs.add(new Job(i));
-        }
+        long startTime = System.currentTimeMillis();
 
-        // ========================
-        // 3. Crear cluster
-        // ========================
-        Cluster cluster = new Cluster(nodos);
+        // Tiempos (demora fija por iteración definida en análisis)
+        int schedulerDelay = 10;
+        int validatorDelay = 20;
+        int executorDelay = 120; // Ajustado a 120 para que tarde ~17s
+        int auditorDelay = 30;
 
-        // ========================
-        // 4. Crear threads
-        // ========================
+        List<Thread> workers = new ArrayList<>();
 
-        // Scheduler
-        int numSchedulers = 3;
-        int jobsPorScheduler = jobs.size() / numSchedulers;
-        List<Thread> schedulers = new ArrayList<>();
-
-        for (int i = 0; i < numSchedulers; i++) {
-
-            int inicio = i * jobsPorScheduler;
-            int fin = (i == numSchedulers - 1) ? jobs.size() : inicio + jobsPorScheduler;
-
-            List<Job> subLista = new ArrayList<>(jobs.subList(inicio, fin));
-
-            Thread t = new Thread(new SchedulerThread(cluster, subLista));
-            schedulers.add(t);
-            t.start();
-        }
-
-        // Validator
-        for (int i = 0; i < 2; i++) {
-            new Thread(new ValidatorThread(cluster)).start();
-        }
-
-        // Worker
+        // 3 Schedulers
         for (int i = 0; i < 3; i++) {
-            new Thread(new WorkerThread(cluster)).start();
+            workers.add(new SchedulerWorker(queueMonitor, clusterMonitor, schedulerDelay));
         }
 
-        // Auditor
+        // 2 Validators
         for (int i = 0; i < 2; i++) {
-            new Thread(new AuditorThread(cluster)).start();
+            workers.add(new ValidatorWorker(queueMonitor, clusterMonitor, validatorDelay));
         }
 
-        // Logger
-        new Thread(new LoggerThread(cluster, timer)).start();
+        // 3 Executors
+        for (int i = 0; i < 3; i++) {
+            workers.add(new ExecutorWorker(queueMonitor, executorDelay));
+        }
 
-        //Hilo aparte para los schedulers
-        new Thread(() -> {
-            for (Thread t : schedulers) {
-                try {
-                    t.join(); // espera a que TODOS los schedulers terminen
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            cluster.setSchedulerTerminado(); // 🔥 ahora sí correcto
-        }).start();
+        // 2 Auditors
+        for (int i = 0; i < 2; i++) {
+            workers.add(new AuditorWorker(queueMonitor, auditorDelay));
+        }
+
+        // Lanzar todos los hilos
+        for (Thread worker : workers) {
+            worker.start();
+        }
+
+        // Logger Worker (Manejador de Fin de Ejecución)
+        LoggerWorker loggerWorker = new LoggerWorker(queueMonitor, clusterMonitor, totalJobs, startTime, workers);
+        loggerWorker.start();
+
+        // Esperar a que termine el logger
+        try {
+            loggerWorker.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Ejecución finalizada.");
     }
 }
