@@ -30,8 +30,8 @@ public class ClusterMonitor {
     }
 
     /**
-     * Busca de manera bloqueante y sincronizada un nodo libre.
-     * Si no hay nodos libres, el hilo espera (se duerme) hasta que uno se libere.
+     * Busca un nodo libre.
+     * Si no hay nodos libres, el hilo espera hasta que uno se libere.
      */
     public synchronized Node acquireFreeNode() throws InterruptedException {
         Node freeNode = findFreeNode();
@@ -46,10 +46,7 @@ public class ClusterMonitor {
         return freeNode;
     }
 
-    /**
-     * Busca un nodo libre aleatoriamente de manera heurística.
-     * Si tras varios intentos aleatorios no encuentra, hace búsqueda secuencial.
-     */
+    // Busca un nodo libre aleatoriamente.
     private Node findFreeNode() {
         if (freeNodes.isEmpty()) {
             return null; // no hay libres

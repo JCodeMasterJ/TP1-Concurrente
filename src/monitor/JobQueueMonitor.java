@@ -11,22 +11,23 @@ public class JobQueueMonitor {
     private final List<Job> finished = new LinkedList<>();
     private final List<Job> failed = new LinkedList<>();
     private final List<Job> validated = new LinkedList<>();
-    
+
     private boolean isSystemActive = true;
 
-    // Métodos genéricos de ayuda para encolar y desencolar de forma bloqueante
-    
+    // Métodos genéricos de ayuda para encolar y desencolar.
+
     private void pushTo(List<Job> list, Job job) {
         synchronized (list) {
             list.add(job);
             list.notifyAll();
         }
     }
-    
+
     private Job popFrom(List<Job> list) throws InterruptedException {
         synchronized (list) {
             while (list.isEmpty()) {
-                if (!isSystemActive) return null; // Salida controlada
+                if (!isSystemActive)
+                    return null; // El sistema ya termino de procesar todos los jobs.
                 list.wait();
             }
             return list.remove(0);
@@ -41,9 +42,11 @@ public class JobQueueMonitor {
     public Job popFromInitialPool() throws InterruptedException {
         return popFrom(initialPool);
     }
-    
+
     public int getInitialPoolSize() {
-        synchronized(initialPool) { return initialPool.size(); }
+        synchronized (initialPool) {
+            return initialPool.size();
+        }
     }
 
     // --- QUEUED ---
@@ -98,16 +101,24 @@ public class JobQueueMonitor {
             return validated.size();
         }
     }
-    
+
     // --- CONTROL ---
     /**
      * Interrumpe todos los waits para finalizar el programa
      */
     public void shutdown() {
         isSystemActive = false;
-        synchronized(initialPool) { initialPool.notifyAll(); }
-        synchronized(queued) { queued.notifyAll(); }
-        synchronized(executing) { executing.notifyAll(); }
-        synchronized(finished) { finished.notifyAll(); }
+        synchronized (initialPool) {
+            initialPool.notifyAll();
+        }
+        synchronized (queued) {
+            queued.notifyAll();
+        }
+        synchronized (executing) {
+            executing.notifyAll();
+        }
+        synchronized (finished) {
+            finished.notifyAll();
+        }
     }
 }

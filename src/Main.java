@@ -27,10 +27,10 @@ public class Main {
 
         long startTime = System.currentTimeMillis();
 
-        // Tiempos (demora fija por iteración definida en análisis)
+        // Tiempos de demora fija.
         int schedulerDelay = 10;
         int validatorDelay = 20;
-        int executorDelay = 120; // Ajustado a 120 para que tarde ~17s
+        int executorDelay = 120;
         int auditorDelay = 30;
 
         List<Thread> workers = new ArrayList<>();
