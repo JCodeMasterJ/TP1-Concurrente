@@ -3,6 +3,8 @@ package monitor;
 import model.Node;
 import model.NodeStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class ClusterMonitor {
@@ -10,16 +12,19 @@ public class ClusterMonitor {
     private final int rows;
     private final int cols;
     private final Random random;
+    private final List<Node> freeNodes;
 
     public ClusterMonitor(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
         this.matrix = new Node[rows][cols];
         this.random = new Random();
+        this.freeNodes = new ArrayList<>();
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 matrix[i][j] = new Node(i, j);
+                freeNodes.add(matrix[i][j]);
             }
         }
     }
@@ -35,7 +40,7 @@ public class ClusterMonitor {
             this.wait();
             freeNode = findFreeNode();
         }
-        
+
         freeNode.setStatus(NodeStatus.BUSY);
         freeNode.incrementExecutionCount();
         return freeNode;
@@ -46,29 +51,19 @@ public class ClusterMonitor {
      * Si tras varios intentos aleatorios no encuentra, hace búsqueda secuencial.
      */
     private Node findFreeNode() {
-        // Intento aleatorio
-        for (int i = 0; i < 10; i++) {
-            int r = random.nextInt(rows);
-            int c = random.nextInt(cols);
-            if (matrix[r][c].getStatus() == NodeStatus.FREE) {
-                return matrix[r][c];
-            }
+        if (freeNodes.isEmpty()) {
+            return null; // no hay libres
         }
-        
-        // Búsqueda secuencial exhaustiva
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (matrix[i][j].getStatus() == NodeStatus.FREE) {
-                    return matrix[i][j];
-                }
-            }
-        }
-        
-        return null; // No hay nodos libres
+
+        // Tomamos un indice al azar de los que sabemos que estan libres
+        int randomIndex = random.nextInt(freeNodes.size());
+        // Lo sacamos de la lista que otro no lo tome
+        return freeNodes.remove(randomIndex);
     }
 
     public synchronized void freeNode(Node node) {
         node.setStatus(NodeStatus.FREE);
+        freeNodes.add(node);
         // Notificar a los que esperan por un nodo libre
         this.notifyAll();
     }
@@ -76,7 +71,7 @@ public class ClusterMonitor {
     public synchronized void markNodeOutOfService(Node node) {
         node.setStatus(NodeStatus.OUT_OF_SERVICE);
     }
-    
+
     public Node[][] getMatrix() {
         return matrix;
     }
