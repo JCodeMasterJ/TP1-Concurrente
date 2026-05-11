@@ -6,7 +6,7 @@ import monitor.JobQueueMonitor;
 
 import java.util.Random;
 
-public class ValidatorWorker extends Thread {
+public class ValidatorWorker implements Runnable {
     private final JobQueueMonitor queueMonitor;
     private final ClusterMonitor clusterMonitor;
     private final int iterDelay;

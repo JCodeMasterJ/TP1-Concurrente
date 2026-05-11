@@ -5,7 +5,7 @@ import model.Node;
 import monitor.ClusterMonitor;
 import monitor.JobQueueMonitor;
 
-public class SchedulerWorker extends Thread {
+public class SchedulerWorker implements Runnable {
     private final JobQueueMonitor queueMonitor;
     private final ClusterMonitor clusterMonitor;
     private final int iterDelay;

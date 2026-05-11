@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-public class LoggerWorker extends Thread {
+public class LoggerWorker implements Runnable {
     private final JobQueueMonitor queueMonitor;
     private final ClusterMonitor clusterMonitor;
     private final int totalJobs;
@@ -16,7 +16,8 @@ public class LoggerWorker extends Thread {
     private final List<Thread> workers;
     private boolean finished = false;
 
-    public LoggerWorker(JobQueueMonitor queueMonitor, ClusterMonitor clusterMonitor, int totalJobs, long startTime, List<Thread> workers) {
+    public LoggerWorker(JobQueueMonitor queueMonitor, ClusterMonitor clusterMonitor, int totalJobs, long startTime,
+            List<Thread> workers) {
         this.queueMonitor = queueMonitor;
         this.clusterMonitor = clusterMonitor;
         this.totalJobs = totalJobs;
@@ -31,7 +32,8 @@ public class LoggerWorker extends Thread {
                 int failed = queueMonitor.getFailedSize();
                 int validated = queueMonitor.getValidatedSize();
 
-                String logLine = "Time: " + (System.currentTimeMillis() - startTime) + "ms | Failed: " + failed + " | Validated: " + validated + "\n";
+                String logLine = "Time: " + (System.currentTimeMillis() - startTime) + "ms | Failed: " + failed
+                        + " | Validated: " + validated + "\n";
                 writer.write(logLine);
                 writer.flush();
 
@@ -56,24 +58,30 @@ public class LoggerWorker extends Thread {
         System.out.println("Jobs Fallidos: " + queueMonitor.getFailedSize());
         System.out.println("Jobs Validados: " + queueMonitor.getValidatedSize());
         System.out.println("----------------- Nodos -----------------");
-        
+
         Node[][] matrix = clusterMonitor.getMatrix();
         int free = 0;
         int oos = 0;
         int busy = 0;
         long totalExecutions = 0;
-        
+
         for (Node[] row : matrix) {
             for (Node node : row) {
                 totalExecutions += node.getExecutionCount();
                 switch (node.getStatus()) {
-                    case FREE: free++; break;
-                    case BUSY: busy++; break;
-                    case OUT_OF_SERVICE: oos++; break;
+                    case FREE:
+                        free++;
+                        break;
+                    case BUSY:
+                        busy++;
+                        break;
+                    case OUT_OF_SERVICE:
+                        oos++;
+                        break;
                 }
             }
         }
-        
+
         System.out.println("Nodos Libres: " + free);
         System.out.println("Nodos Ocupados: " + busy);
         System.out.println("Nodos Fuera de Servicio: " + oos);

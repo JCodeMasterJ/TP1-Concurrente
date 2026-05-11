@@ -27,31 +27,31 @@ public class Main {
         long startTime = System.currentTimeMillis();
 
         // Tiempos de demora fija.
-        int schedulerDelay = 10;
-        int validatorDelay = 20;
+        int schedulerDelay = 30;
+        int validatorDelay = 50;
         int executorDelay = 120;
-        int auditorDelay = 30;
+        int auditorDelay = 70;
 
         List<Thread> workers = new ArrayList<>();
 
         // 3 Schedulers
         for (int i = 0; i < 3; i++) {
-            workers.add(new SchedulerWorker(queueMonitor, clusterMonitor, schedulerDelay));
+            workers.add(new Thread(new SchedulerWorker(queueMonitor, clusterMonitor, schedulerDelay)));
         }
 
         // 2 Validators
         for (int i = 0; i < 2; i++) {
-            workers.add(new ValidatorWorker(queueMonitor, clusterMonitor, validatorDelay));
+            workers.add(new Thread(new ValidatorWorker(queueMonitor, clusterMonitor, validatorDelay)));
         }
 
         // 3 Executors
         for (int i = 0; i < 3; i++) {
-            workers.add(new ExecutorWorker(queueMonitor, executorDelay));
+            workers.add(new Thread(new ExecutorWorker(queueMonitor, executorDelay)));
         }
 
         // 2 Auditors
         for (int i = 0; i < 2; i++) {
-            workers.add(new AuditorWorker(queueMonitor, auditorDelay));
+            workers.add(new Thread(new AuditorWorker(queueMonitor, auditorDelay)));
         }
 
         // Lanzar todos los hilos
@@ -60,7 +60,7 @@ public class Main {
         }
 
         // Logger Worker (Manejador de Fin de Ejecución)
-        LoggerWorker loggerWorker = new LoggerWorker(queueMonitor, clusterMonitor, totalJobs, startTime, workers);
+        Thread loggerWorker = new Thread(new LoggerWorker(queueMonitor, clusterMonitor, totalJobs, startTime, workers));
         loggerWorker.start();
 
         // Esperar a que termine el logger

@@ -5,7 +5,7 @@ import monitor.JobQueueMonitor;
 
 import java.util.Random;
 
-public class ExecutorWorker extends Thread {
+public class ExecutorWorker implements Runnable {
     private final JobQueueMonitor queueMonitor;
     private final int iterDelay;
     private final Random random = new Random();
