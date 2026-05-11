@@ -9,14 +9,10 @@ import java.util.Random;
 
 public class ClusterMonitor {
     private final Node[][] matrix;
-    private final int rows;
-    private final int cols;
     private final Random random;
     private final List<Node> freeNodes;
 
     public ClusterMonitor(int rows, int cols) {
-        this.rows = rows;
-        this.cols = cols;
         this.matrix = new Node[rows][cols];
         this.random = new Random();
         this.freeNodes = new ArrayList<>();

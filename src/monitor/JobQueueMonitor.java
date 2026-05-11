@@ -3,6 +3,7 @@ package monitor;
 import model.Job;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 public class JobQueueMonitor {
     private final List<Job> initialPool = new LinkedList<>();
@@ -13,6 +14,7 @@ public class JobQueueMonitor {
     private final List<Job> validated = new LinkedList<>();
 
     private boolean isSystemActive = true;
+    private final Random random = new Random();
 
     // Métodos genéricos de ayuda para encolar y desencolar.
 
@@ -26,11 +28,25 @@ public class JobQueueMonitor {
     private Job popFrom(List<Job> list) throws InterruptedException {
         synchronized (list) {
             while (list.isEmpty()) {
-                if (!isSystemActive)
-                    return null; // El sistema ya termino de procesar todos los jobs.
+                if (!isSystemActive) {
+                    return null;
+                }
                 list.wait();
             }
             return list.remove(0);
+        }
+    }
+
+    private Job popRandomFrom(List<Job> list) throws InterruptedException {
+        synchronized (list) {
+            while (list.isEmpty()) {
+                if (!isSystemActive) {
+                    return null;
+                }
+                list.wait();
+            }
+            int randomIndex = random.nextInt(list.size());
+            return list.remove(randomIndex);
         }
     }
 
@@ -55,7 +71,7 @@ public class JobQueueMonitor {
     }
 
     public Job popFromQueued() throws InterruptedException {
-        return popFrom(queued);
+        return popRandomFrom(queued);
     }
 
     // --- EXECUTING ---

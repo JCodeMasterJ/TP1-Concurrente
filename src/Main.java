@@ -11,7 +11,6 @@ public class Main {
         System.out.println("Iniciando Simulador de Cluster...");
 
         // Configuración
-        int totalNodes = 200; // 20x10 matrix
         int rows = 20;
         int cols = 10;
         int totalJobs = 500;
